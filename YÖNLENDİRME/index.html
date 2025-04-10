@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Hastane Rehberi - Poliklinikler ve Acil Servis Bilgileri" />
+  <title>Hastane Rehberi</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      padding: 25px;
+      max-width: 450px;
+      width: 100%;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #1a1a1a;
+    }
+
+    p {
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .button {
+      display: block;
+      background-color: #007bff;
+      color: white;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+
+    .button:hover {
+      background-color: #0056b3;
+    }
+
+    .section {
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .section h2 {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    ul li {
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+    }
+
+    ul li::before {
+      content: "🩺";
+      margin-right: 8px;
+    }
+
+    .footer {
+      font-size: 12px;
+      color: #888;
+      margin-top: 30px;
+    }
+
+    .language {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .lang-btn {
+      background: #e9ecef;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .lang-btn:hover {
+      background: #ced4da;
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        padding: 15px;
+        margin-top: 10px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .button {
+        padding: 10px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="language">
+    <button class="lang-btn" onclick="changeLanguage('tr')">Türkçe</button>
+    <button class="lang-btn" onclick="changeLanguage('en')">English</button>
+  </div>
+
+  <div class="card">
+    <h1>Hastane Rehberine Hoş Geldiniz</h1>
+    <p>Hangi polikliniğe gitmeniz gerektiğini bilmiyorsanız danışmaya başvurabilirsiniz.</p>
+
+    <a href="https://www.google.com/maps?q=hastane+konumu" class="button" target="_blank">Konum - Yol Tarifi</a>
+    <a href="poliklinik.html" class="button" target="_blank">Poliklinik Bilgileri</a>
+    <a href="tel:112" class="button" style="background-color: #dc3545;" aria-label="Acil Servis İletişim">Acil Servis</a>
+    <a href="tel:(0276) 224 00 00" class="button" style="background-color: #28a745;" aria-label="Danışma İletişim">Danışma</a>
+
+
+  <div class="footer">
+    © 2025 Mehmet Can | Rehber Sistemi
+  </div>
+
+  <script>
+    function changeLanguage(lang) {
+      if (lang === 'en') {
+        document.querySelector('h1').innerText = 'Welcome to the Hospital Guide';
+        document.querySelector('p').innerText = 'If you are unsure which clinic to visit, you can refer to the information desk.';
+        document.querySelector('.button').innerText = 'Location - Directions';
+        document.querySelectorAll('.section h2')[0].innerText = '📋 Clinics';
+      } else {
+        document.querySelector('h1').innerText = 'Hastane Rehberine Hoş Geldiniz';
+        document.querySelector('p').innerText = 'Hangi polikliniğe gitmeniz gerektiğini bilmiyorsanız danışmaya başvurabilirsiniz.';
+        document.querySelector('.button').innerText = 'Konum - Yol Tarifi';
+        document.querySelectorAll('.section h2')[0].innerText = '📋 Poliklinikler';
+      }
+    }
+  </script>
+
+</body>
+</html>

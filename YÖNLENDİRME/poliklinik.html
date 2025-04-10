@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Poliklinik Yönlendirme</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+      color: #333;
+    }
+
+    header {
+      background: linear-gradient(45deg, #0077b6, #00b4d8);
+      color: white;
+      text-align: center;
+      padding: 25px 15px;
+      font-size: 24px;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .branch-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .branch-header {
+      background-color: #e0f0ff;
+      padding: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    .branch-header i {
+      margin-right: 10px;
+      color: #0077b6;
+    }
+
+    .doctor-list {
+      display: none;
+      padding: 10px 20px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .doctor-btn {
+      background-color: #f7f7f7;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      width: 100%;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.2s;
+    }
+
+    .doctor-btn i {
+      margin-right: 10px;
+      color: #3a86ff;
+    }
+
+    .doctor-btn:hover {
+      background-color: #e0f7ff;
+    }
+
+    /* Floating Search */
+    #floating-search-container {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      z-index: 1000;
+    }
+
+    #floating-search {
+      background-color: #00b4d8;
+      border-radius: 50px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: width 0.3s ease, padding 0.3s ease;
+      width: 60px;
+      overflow: hidden;
+    }
+
+    #floating-search input {
+      border: none;
+      outline: none;
+      padding: 8px;
+      border-radius: 20px;
+      font-size: 16px;
+      flex: 1;
+      width: 0;
+      opacity: 0;
+      transition: width 0.3s ease, opacity 0.3s ease;
+    }
+
+    #floating-search.open {
+      width: 300px;
+      padding: 12px 20px;
+      background-color: #ffffff;
+    }
+
+    #floating-search.open input {
+      width: 100%;
+      opacity: 1;
+      color: #333;
+    }
+
+    #floating-search i {
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    #floating-search.open i {
+      color: #00b4d8;
+    }
+
+    #closeSearch {
+      font-size: 20px;
+      cursor: pointer;
+      display: none;
+      color: #999;
+    }
+
+    #floating-search.open #closeSearch {
+      display: inline;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    .modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5); /* Arka plan karartması */
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 10% auto;
+  padding: 20px 30px;
+  border: 1px solid #ccc;
+  width: 90%;
+  max-width: 500px;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  position: relative;
+  text-align: center;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+}
+
+.close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #000;
+}
+
+#get-directions {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  margin-top: 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#get-directions:hover {
+  background-color: #0056b3;
+}
+
+  </style>
+</head>
+
+<body>
+  
+  <header>
+    
+    Poliklinik Yönlendirme
+  </header>
+  <div class="container" id="branchContainer">
+    <!-- Buraya poliklinikler gelecektir -->
+
+  <div id="floating-search-container">
+    <div id="floating-search">
+      <i class="fas fa-search" id="search-icon"></i>
+      <input type="text" id="searchInput" placeholder="Ara...">
+      <span id="closeSearch">&times;</span>
+    </div>
+  </div>
+
+  <script>
+    function toggleBranch(branchId) {
+      const branch = document.getElementById(branchId);
+      branch.style.display = branch.style.display === 'block' ? 'none' : 'block';
+    }
+
+    const floatingSearch = document.getElementById("floating-search");
+    const searchIcon = document.getElementById("search-icon");
+    const closeSearch = document.getElementById("closeSearch");
+    const searchInput = document.getElementById("searchInput");
+
+    searchIcon.addEventListener("click", () => {
+      floatingSearch.classList.add("open");
+      searchInput.focus();
+    });
+
+    closeSearch.addEventListener("click", () => {
+      floatingSearch.classList.remove("open");
+      searchInput.value = "";
+      document.querySelectorAll(".branch-card").forEach(card => {
+        card.style.display = "block";
+        const doctors = card.querySelectorAll(".doctor-btn");
+        doctors.forEach(btn => btn.style.display = "flex");
+      });
+    });
+
+    searchInput.addEventListener("input", function () {
+      const filter = this.value.toLowerCase();
+      const branches = document.querySelectorAll('.branch-card');
+
+      branches.forEach(branch => {
+        const branchText = branch.querySelector('.branch-header').textContent.toLowerCase();
+        const doctorButtons = branch.querySelectorAll('.doctor-btn');
+
+        let branchMatch = branchText.includes(filter);
+        let anyDoctorMatch = false;
+
+        doctorButtons.forEach(btn => {
+          const doctorName = btn.textContent.toLowerCase();
+          const match = doctorName.includes(filter);
+          btn.style.display = match || branchMatch ? 'flex' : 'none';
+          if (match) anyDoctorMatch = true;
+        });
+
+        branch.style.display = branchMatch || anyDoctorMatch ? 'block' : 'none';
+        if (!branchMatch && !anyDoctorMatch) {
+          branch.querySelector('.doctor-list').style.display = 'none';
+        }
+      });
+    });
+  </script>
+
+
+
+
+  <div class="container">
+    <!-- Aile Hekimi -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('aile-hekimi')">
+        <i class="fas fa-home"></i> Aile Hekimi
+      </div>
+      <div class="doctor-list" id="aile-hekimi">
+        <button class="doctor-btn" onclick="showDoctor('hilal')"><i class="fas fa-stethoscope"></i> UZM.DR.HİLAL KALE AKTAŞ</button>
+        <button class="doctor-btn" onclick="showDoctor('recep')"><i class="fas fa-stethoscope"></i> UZM.DR.RECEP AKTAŞ</button>
+        <button class="doctor-btn" onclick="showDoctor('utku')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.UTKU ESER</button>
+      </div>
+    </div>
+
+    <!-- Beyin Cerrahisi -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('beyin-cerrahisi')">
+        <i class="fas fa-brain"></i> Beyin Cerrahisi
+      </div>
+      <div class="doctor-list" id="beyin-cerrahisi">
+        <button class="doctor-btn" onclick="showDoctor('berna')"><i class="fas fa-stethoscope"></i> UZM DR.BERNA GÖKÇE</button>
+        <button class="doctor-btn" onclick="showDoctor('hakan')"><i class="fas fa-stethoscope"></i> UZM DR.HAKAN TETİK</button>
+      </div>
+    </div>
+
+    <!-- Cildiye -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('cildiye')">
+        <i class="fas fa-smile"></i> Cilt Polikliniği
+
+
+
+      </div>
+      <div class="doctor-list" id="cildiye">
+        <button class="doctor-btn" onclick="showDoctor('ece')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.ECE ERBAĞCI</button>
+      </div>
+    </div>
+
+    <!-- Çocuk Polikliniği -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('cocuk-poliklinigi')">
+        <i class="fas fa-child"></i> Çocuk Polikliniği
+      </div>
+      <div class="doctor-list" id="cocuk-poliklinigi">
+        <button class="doctor-btn" onclick="showDoctor('ozge')"><i class="fas fa-stethoscope"></i> UZM.DR.ÖZGE ERDOĞAN</button>
+        <button class="doctor-btn" onclick="showDoctor('pinar')"><i class="fas fa-stethoscope"></i> UZM.DR.PINAR ZEYBEK</button>
+        <button class="doctor-btn" onclick="showDoctor('recep')"><i class="fas fa-stethoscope"></i> UZM.DR. RECEP ERDOĞAN</button>
+        <button class="doctor-btn" onclick="showDoctor('seren')"><i class="fas fa-stethoscope"></i> UZM.DR.SEREN CERİT ÖKSÜZ</button>
+        <button class="doctor-btn" onclick="showDoctor('setanay')"><i class="fas fa-stethoscope"></i> UZM.DR.SETANAY ALTUNTAŞ BABACANOĞLU</button>
+        <button class="doctor-btn" onclick="showDoctor('selma')"><i class="fas fa-stethoscope"></i> UZM.DR.SELMA ERYILMAZ</button>
+      </div>
+    </div>
+
+    <!-- Sağlıklı Çocuk Polikliniği -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('saglikli-cocuk')">
+        <i class="fas fa-apple-alt"></i> Sağlıklı Çocuk Polikliniği
+      </div>
+      <div class="doctor-list" id="saglikli-cocuk">
+        <button class="doctor-btn" onclick="showDoctor('cemile')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü. CEMİLE KÜBRA ZEYBEK</button>
+        <button class="doctor-btn" onclick="showDoctor('ayse')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.AYSEL BURCU İBİLİ</button>
+        <button class="doctor-btn" onclick="showDoctor('faruk')"><i class="fas fa-stethoscope"></i> UZM.DR. FARUK KAZANCI</button>
+      </div>
+    </div>
+
+    <!-- Çocuk Cerrahisi -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('cocuk-cerrahisi')">
+        <i class="fas fa-cut"></i> Çocuk Cerrahisi
+      </div>
+      <div class="doctor-list" id="cocuk-cerrahisi">
+        <button class="doctor-btn" onclick="showDoctor('gulenay')"><i class="fas fa-stethoscope"></i> UZM.DR .GÜLENAY KORKMAZ</button>
+        <button class="doctor-btn" onclick="showDoctor('ozge')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü. ÖZGE DURMAZ</button>
+      </div>
+    </div>
+
+    <!-- Çocuk Enfeksiyon Polikliniği -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('cocuk-enfeksiyon')">
+        <i class="fas fa-bacteria"></i> Çocuk Enfeksiyon Polikliniği
+      </div>
+      <div class="doctor-list" id="cocuk-enfeksiyon">
+        <button class="doctor-btn" onclick="showDoctor('zuhal')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.ZÜHAL ÜMİT</button>
+      </div>
+    </div>
+
+    <!-- Çocuk Gastroenteroloji -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('cocuk-gastroenteroloji')">
+        <i class="fas fa-lemon"></i> Çocuk Gastroenteroloji
+      </div>
+      <div class="doctor-list" id="cocuk-gastroenteroloji">
+        <button class="doctor-btn" onclick="showDoctor('dogan')"><i class="fas fa-stethoscope"></i> UZM.DR.DOĞAN BARUT</button>
+      </div>
+    </div>
+
+    <!-- Çocuk Gelişim Uzmanı -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('cocuk-gelisim')">
+        <i class="fas fa-puzzle-piece"></i> Çocuk Gelişim Uzmanı
+      </div>
+      <div class="doctor-list" id="cocuk-gelisim">
+        <button class="doctor-btn" onclick="showDoctor('hediye')"><i class="fas fa-stethoscope"></i> HEDİYE ALPARSLAN</button>
+        <button class="doctor-btn" onclick="showDoctor('muzeyen')"><i class="fas fa-stethoscope"></i> MÜZEYYEN AHAT</button>
+      </div>
+    </div>
+
+    <!-- Çocuk Psikiyatri -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('cocuk-psikiyatri')">
+        <i class="fas fa-brain"></i> Çocuk Psikiyatri
+      </div>
+      <div class="doctor-list" id="cocuk-psikiyatri">
+        <button class="doctor-btn" onclick="showDoctor('ece')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.ECE AKAR BARUT</button>
+        <button class="doctor-btn" onclick="showDoctor('hande')"><i class="fas fa-stethoscope"></i> UZM.DR.HANDE GÜNAL OKUMUŞ</button>
+        <button class="doctor-btn" onclick="showDoctor('ayla')"><i class="fas fa-stethoscope"></i> UZM.DR AYLA GÖKMEN SALICI</button>
+        <button class="doctor-btn" onclick="showDoctor('eren')"><i class="fas fa-stethoscope"></i> UZM DR EREN GÖKCAN</button>
+        <button class="doctor-btn" onclick="showDoctor('fatih')"><i class="fas fa-stethoscope"></i> UZM.DR.FATİH KURBAN</button>
+        <button class="doctor-btn" onclick="showDoctor('hakan')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü. HAKAN DEMİRCİ</button>
+        <button class="doctor-btn" onclick="showDoctor('hamide')"><i class="fas fa-stethoscope"></i> UZM.DR.HAMİDE EDA TATLIPINAR TOSUN</button>
+      </div>
+    </div>
+
+    <!-- Dahiliye -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('dahiliye')">
+        <i class="fas fa-heart"></i> Dahiliye
+      </div>
+      <div class="doctor-list" id="dahiliye">
+        <button class="doctor-btn" onclick="showDoctor('mahmut')"><i class="fas fa-stethoscope"></i> UZM.DR.MAHMUT CAN KILIÇ</button>
+        <button class="doctor-btn" onclick="showDoctor('mehmet')"><i class="fas fa-stethoscope"></i> UZM DR MEHMET AVCI</button>
+        <button class="doctor-btn" onclick="showDoctor('murat')"><i class="fas fa-stethoscope"></i> UZM.DR.MURAT KIRAN</button>
+        <button class="doctor-btn" onclick="showDoctor('ozgur')"><i class="fas fa-stethoscope"></i> UZM.DR.ÖZGÜR ERCAN ERAY</button>
+        <button class="doctor-btn" onclick="showDoctor('ozlem')"><i class="fas fa-stethoscope"></i> UZM DR ÖZLEM BEYAZIT</button>
+        <button class="doctor-btn" onclick="showDoctor('turker')"><i class="fas fa-stethoscope"></i> UZM.DR.TÜRKER SARIKAYA</button>
+      </div>
+    </div>
+
+    <!-- Diyet Polikliniği -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('diyet')">
+        <i class="fas fa-apple-alt"></i> Diyet Polikliniği
+      </div>
+      <div class="doctor-list" id="diyet">
+        <button class="doctor-btn" onclick="showDoctor('ibrahim')"><i class="fas fa-stethoscope"></i> H.İBRAHİM KOÇ</button>
+        <button class="doctor-btn" onclick="showDoctor('mete')"><i class="fas fa-stethoscope"></i> METEHAN AKIN</button>
+        <button class="doctor-btn" onclick="showDoctor('merve')"><i class="fas fa-stethoscope"></i> MERVE ÇANKAYA</button>
+        <button class="doctor-btn" onclick="showDoctor('nazife')"><i class="fas fa-stethoscope"></i> NAZİFE KALFA ÇETİN</button>
+        <button class="doctor-btn" onclick="showDoctor('nur')"><i class="fas fa-stethoscope"></i> NUR CENGİZ SATILMIŞ</button>
+        <button class="doctor-btn" onclick="showDoctor('nuriye')"><i class="fas fa-stethoscope"></i> NURİYE AYGÜN NASLİÇ</button>
+        <button class="doctor-btn" onclick="showDoctor('sidika')"><i class="fas fa-stethoscope"></i> SIDIKA NUR SOLAK</button>
+        <button class="doctor-btn" onclick="showDoctor('sumeyye')"><i class="fas fa-stethoscope"></i> SÜMEYYE BETÜL TAŞCI</button>
+        <button class="doctor-btn" onclick="showDoctor('seyma')"><i class="fas fa-stethoscope"></i> ŞEYMA ÖZMEN</button>
+      </div>
+    </div>
+
+
+
+<!-- Endokrin Polikliniği -->
+<div class="branch-card">
+  <div class="branch-header" onclick="toggleBranch('endokrin')">
+    <i class="fas fa-user-md"></i> Endokrin Polikliniği
+  </div>
+  <div class="doctor-list" id="endokrin">
+    <button class="doctor-btn" onclick="showDoctor('bora')"><i class="fas fa-stethoscope"></i> UZM.DR.BORA TOROS</button>
+    <button class="doctor-btn" onclick="showDoctor('cevdets')"><i class="fas fa-stethoscope"></i> PROF.DR. CEVDET DURAN</button>
+    <button class="doctor-btn" onclick="showDoctor('ziynet')"><i class="fas fa-stethoscope"></i> PROF. DR ZİYNET ALPHAN ÜÇ</button>
+  </div>
+</div>
+
+<!-- Endokrin Yandallar Polikliniği -->
+<div class="branch-card">
+  <div class="branch-header" onclick="toggleBranch('endokrin-yandallar')">
+    <i class="fas fa-user-md"></i> Endokrin Yandallar Polikliniği
+  </div>
+  <div class="doctor-list" id="endokrin-yandallar">
+    <button class="doctor-btn" onclick="showDoctor('merve-ucar')"><i class="fas fa-stethoscope"></i> UZM.DR.MERVE UÇAR TOROS</button>
+  </div>
+</div>
+
+<!-- Enfeksiyon Polikliniği -->
+<div class="branch-card">
+  <div class="branch-header" onclick="toggleBranch('enfeksiyon')">
+    <i class="fas fa-virus"></i> Enfeksiyon Polikliniği
+  </div>
+  <div class="doctor-list" id="enfeksiyon">
+    <button class="doctor-btn" onclick="showDoctor('havva')"><i class="fas fa-stethoscope"></i> UZM.DR.HAVVA ZÜNEYRE PALA</button>
+    <button class="doctor-btn" onclick="showDoctor('tamer')"><i class="fas fa-stethoscope"></i> UZM. DR.TAMER MİCAN</button>
+    <button class="doctor-btn" onclick="showDoctor('selma')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.SELMA GÜL SEVER</button>
+    <button class="doctor-btn" onclick="showDoctor('yekta')"><i class="fas fa-stethoscope"></i> UZM.DR.YEKTA ÖZKILIÇ</button>
+    <button class="doctor-btn" onclick="showDoctor('ali')"><i class="fas fa-stethoscope"></i> DOÇ.DR.ALİ YAVUZ KARAHAN</button>
+  </div>
+</div>
+
+<!-- Fizik Tedavi ve Rehabilitasyon Merkezi -->
+<div class="branch-card">
+  <div class="branch-header" onclick="toggleBranch('fizik-tedavi')">
+    <i class="fas fa-procedures"></i> Fizik Tedavi ve Rehabilitasyon Merkezi
+  </div>
+  <div class="doctor-list" id="fizik-tedavi">
+    <button class="doctor-btn" onclick="showDoctor('asligul')"><i class="fas fa-stethoscope"></i> UZM.DR.ASLIGÜL ALKAN ÖZKAN</button>
+    <button class="doctor-btn" onclick="showDoctor('asli')"><i class="fas fa-stethoscope"></i> UZM.DR.ASLI KELEŞ ÖNAL</button>
+    <button class="doctor-btn" onclick="showDoctor('burcu')"><i class="fas fa-stethoscope"></i> UZM.DR.BURCU ERGİN</button>
+    <button class="doctor-btn" onclick="showDoctor('mustafa')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü. MUSTAFA ŞENGÜL</button>
+    <button class="doctor-btn" onclick="showDoctor('nadi')"><i class="fas fa-stethoscope"></i> UZM.DR.NADİRE DAL</button>
+    <button class="doctor-btn" onclick="showDoctor('nihall')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.NİHAL YILMAZ</button>
+  </div>
+</div>
+
+<!-- Gastroenteroloji -->
+<div class="branch-card">
+  <div class="branch-header" onclick="toggleBranch('gastroenteroloji')">
+    <i class="fas fa-user-md"></i> Gastroenteroloji
+  </div>
+  <div class="doctor-list" id="gastroenteroloji">
+    <button class="doctor-btn" onclick="showDoctor('ozan')"><i class="fas fa-stethoscope"></i> UZM.DR.OZAN CENGİZ</button>
+    <button class="doctor-btn" onclick="showDoctor('ahmet')"><i class="fas fa-stethoscope"></i> UZM.DR.AHMET ÇEKİÇ</button>
+    <button class="doctor-btn" onclick="showDoctor('baris')"><i class="fas fa-stethoscope"></i> DOÇ.DR. BARIŞ SEVİNÇ</button>
+    <button class="doctor-btn" onclick="showDoctor('doruk')"><i class="fas fa-stethoscope"></i> UZM.DR.DORUK BARLAS</button>
+  </div>
+</div>
+
+<!-- Genel Cerrahi Polikliniği -->
+<div class="branch-card">
+  <div class="branch-header" onclick="toggleBranch('genel-cerrahi')">
+    <i class="fas fa-user-md"></i> Genel Cerrahi Polikliniği
+  </div>
+  <div class="doctor-list" id="genel-cerrahi">
+    <button class="doctor-btn" onclick="showDoctor('mete')"><i class="fas fa-stethoscope"></i> UZM.DR.METE ÇİÇEK</button>
+    <button class="doctor-btn" onclick="showDoctor('nurullah')"><i class="fas fa-stethoscope"></i> DOÇ.DR. NURULLAH DAMBURACI</button>
+    <button class="doctor-btn" onclick="showDoctor('omer')"><i class="fas fa-stethoscope"></i> PROF.DR.ÖMER KARAHAN</button>
+    <button class="doctor-btn" onclick="showDoctor('yavuz')"><i class="fas fa-stethoscope"></i> UZM.DR. YAVUZ SELİM KAŞIKÇI</button>
+    <button class="doctor-btn" onclick="showDoctor('zeynep')"><i class="fas fa-stethoscope"></i> DOÇ.DR.ZEYNEP ÖZKAN</button>
+    <button class="doctor-btn" onclick="showDoctor('aysel')"><i class="fas fa-stethoscope"></i> UZM.DR.AYSEL ÜNLÜ</button>
+  </div>
+</div>
+
+<!-- Göğüs Polikliniği -->
+<div class="branch-card">
+  <div class="branch-header" onclick="toggleBranch('gogus')">
+    <i class="fas fa-lungs"></i> Göğüs Polikliniği
+
+  </div>
+  <div class="doctor-list" id="gogus">
+    <button class="doctor-btn" onclick="showDoctor('murat')"><i class="fas fa-stethoscope"></i> UZM.DR.MURAT ARUL</button>
+    <button class="doctor-btn" onclick="showDoctor('nihal')"><i class="fas fa-stethoscope"></i> UZM. DR. NİHAL BAKIRKALAY AYDIN</button>
+    <button class="doctor-btn" onclick="showDoctor('seval')"><i class="fas fa-stethoscope"></i> UZM.DR.H.SEVAL ACAR</button>
+    <button class="doctor-btn" onclick="showDoctor('ahmet')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü. AHMET NURDAĞ</button>
+  </div>
+</div>
+
+<!-- Göğüs Cerrahisi -->
+<div class="branch-card">
+  <div class="branch-header" onclick="toggleBranch('gogus-cerrahisi')">
+    <i class="fas fa-heart"></i> Göğüs Cerrahisi
+
+
+  </div>
+  <div class="doctor-list" id="gogus-cerrahisi">
+    <button class="doctor-btn" onclick="showDoctor('fatma')"><i class="fas fa-stethoscope"></i> UZM.DR.FATMAGÜL DEMİR</button>
+    <button class="doctor-btn" onclick="showDoctor('zeynep')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü. ZEYNEP CESUR</button>
+  </div>
+</div>
+
+<!-- Göz Polikliniği -->
+<div class="branch-card">
+  <div class="branch-header" onclick="toggleBranch('goz')">
+    <i class="fas fa-eye"></i> Göz Polikliniği
+  </div>
+  <div class="doctor-list" id="goz">
+    <button class="doctor-btn" onclick="showDoctor('ali')"><i class="fas fa-stethoscope"></i> UZM.DR.ALİ KANIK</button>
+    <button class="doctor-btn" onclick="showDoctor('aydin')"><i class="fas fa-stethoscope"></i> UZM.DR.AYDIN ALPER YILMAZLAR</button>
+    <button class="doctor-btn" onclick="showDoctor('hatice')"><i class="fas fa-stethoscope"></i> DOÇ.DR. HATİCE DALDAL</button>
+    <button class="doctor-btn" onclick="showDoctor('mehmet')"><i class="fas fa-stethoscope"></i> UZM.DR.MEHMET ACAR</button>
+    <button class="doctor-btn" onclick="showDoctor('sevil')"><i class="fas fa-stethoscope"></i> UZM.DR.SEVİL TÜRÜDÜ</button>
+    <button class="doctor-btn" onclick="showDoctor('suzan')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.SUZAN DOĞRUYA</button>
+    <button class="doctor-btn" onclick="showDoctor('serife')"><i class="fas fa-stethoscope"></i> UZM.DR.ŞERİFE NUR ÇİFTÇİ</button>
+    <button class="doctor-btn" onclick="showDoctor('beyhan')"><i class="fas fa-stethoscope"></i> UZM.DR.BEYHAN TEVFİK</button>
+    <button class="doctor-btn" onclick="showDoctor('irem')"><i class="fas fa-stethoscope"></i> DOÇ.DR.İREM ŞENYUVA</button>
+    <button class="doctor-btn" onclick="showDoctor('ismail')"><i class="fas fa-stethoscope"></i> UZM.DR.İSMAİL AKİF TÜFEKÇİOĞLU</button>
+  </div>
+</div>
+    <!-- Kadın Doğum Polikliniği -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('kadin-dogum')">
+        <i class="fas fa-user-md"></i> Kadın Doğum Polikliniği
+      </div>
+      <div class="doctor-list" id="kadin-dogum">
+        <button class="doctor-btn" onclick="showDoctor('mert')"><i class="fas fa-stethoscope"></i> UZM.DR.MERT ERDEMİR</button>
+        <button class="doctor-btn" onclick="showDoctor('muharrem')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.MUHARREM UTKAHAN ÖZCAN</button>
+        <button class="doctor-btn" onclick="showDoctor('latife')"><i class="fas fa-stethoscope"></i> UZM.DR.LATİFE SARA ÖZMEN</button>
+        <button class="doctor-btn" onclick="showDoctor('melek')"><i class="fas fa-stethoscope"></i> UZM. DR MELEK ERDOĞAN</button>
+        <button class="doctor-btn" onclick="showDoctor('nilufer')"><i class="fas fa-stethoscope"></i> UZM.DR.NİLÜFER ÇETİN YILMAZLAR</button>
+        <button class="doctor-btn" onclick="showDoctor('selim')"><i class="fas fa-stethoscope"></i> UZM.DR.SELİM ÖZTÜRK</button>
+        <button class="doctor-btn" onclick="showDoctor('semra')"><i class="fas fa-stethoscope"></i> UZM.DR.SEMRA KESKİN</button>
+        <button class="doctor-btn" onclick="showDoctor('aydin')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü. AYDIN KOÇ</button>
+        <button class="doctor-btn" onclick="showDoctor('baris')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü. BARIŞ TUNCER</button>
+        <button class="doctor-btn" onclick="showDoctor('ilker')"><i class="fas fa-stethoscope"></i> PROF.DR.İLKER ALAT</button>
+      </div>
+    </div>
+
+    <!-- Kalp Damar Cerrahisi Polikliniği -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('kalp-damar')">
+        <i class="fas fa-heartbeat"></i> Kalp Damar Cerrahisi Polikliniği
+      </div>
+      <div class="doctor-list" id="kalp-damar">
+        <button class="doctor-btn" onclick="showDoctor('metin')"><i class="fas fa-stethoscope"></i> UZM. DR METİN GÜLCÜLER</button>
+        <button class="doctor-btn" onclick="showDoctor('murat')"><i class="fas fa-stethoscope"></i> UZM.DR.MURAT YANAR</button>
+        <button class="doctor-btn" onclick="showDoctor('onur')"><i class="fas fa-stethoscope"></i> UZM.DR.ONUR IRAK</button>
+        <button class="doctor-btn" onclick="showDoctor('sercan')"><i class="fas fa-stethoscope"></i> UZM DR SERCAN DUMAN</button>
+        <button class="doctor-btn" onclick="showDoctor('baris-d')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.BARIŞ DİNDAR</button>
+      </div>
+    </div>
+
+    <!-- Kardiyoloji Polikliniği -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('kardiyoloji')">
+        <i class="fas fa-heart"></i> Kardiyoloji Polikliniği
+      </div>
+      <div class="doctor-list" id="kardiyoloji">
+        <button class="doctor-btn" onclick="showDoctor('ferhat')"><i class="fas fa-stethoscope"></i> DOÇ.DR. FERHAT DİNDAŞ</button>
+        <button class="doctor-btn" onclick="showDoctor('ismail')"><i class="fas fa-stethoscope"></i> PROF. DR İSMAİL BIYIK</button>
+        <button class="doctor-btn" onclick="showDoctor('ozkan')"><i class="fas fa-stethoscope"></i> PROF.DR ÖZKAN CANDAN</button>
+        <button class="doctor-btn" onclick="showDoctor('pinar')"><i class="fas fa-stethoscope"></i> UZM.DR.PINAR ATYA</button>
+        <button class="doctor-btn" onclick="showDoctor('sebahat')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.SEBAHAT TEKELİ ŞENGÜL</button>
+        <button class="doctor-btn" onclick="showDoctor('serif')"><i class="fas fa-stethoscope"></i> UZM.DR.ŞERİF AHMET KANDEMİR</button>
+        <button class="doctor-btn" onclick="showDoctor('abdullah')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü. ABDULLAH KINAR</button>
+        <button class="doctor-btn" onclick="showDoctor('avni')"><i class="fas fa-stethoscope"></i> UZM.DR.AVNİ ÜNAL</button>
+      </div>
+    </div>
+
+    <!-- Kulak Burun Boğaz Polikliniği -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('kbb')">
+        <i class="fas fa-headphones"></i> Kulak Burun Boğaz Polikliniği
+      </div>
+      <div class="doctor-list" id="kbb">
+        <button class="doctor-btn" onclick="showDoctor('celil')"><i class="fas fa-stethoscope"></i> UZM.DR.CELİL CANTÜRK</button>
+        <button class="doctor-btn" onclick="showDoctor('faruk')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü. FARUK KADRİ BAKKAL</button>
+        <button class="doctor-btn" onclick="showDoctor('kerimcan')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.KERİMCAN ÇAKICI</button>
+        <button class="doctor-btn" onclick="showDoctor('necat')"><i class="fas fa-stethoscope"></i> PROF.DR.NECAT ALATAŞ</button>
+        <button class="doctor-btn" onclick="showDoctor('ramazan')"><i class="fas fa-stethoscope"></i> UZM.DR.RAMAZAN YAVUZ</button>
+        <button class="doctor-btn" onclick="showDoctor('yunus')"><i class="fas fa-stethoscope"></i> UZM.DR.YUNUS EMRE TOPAN</button>
+        <button class="doctor-btn" onclick="showDoctor('zeki')"><i class="fas fa-stethoscope"></i> UZM.DR.ZEKİ AŞKIN</button>
+      </div>
+    </div>
+    <!-- Nefroloji -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('nefroloji')">
+        <i class="fas fa-user-md"></i> Nefroloji Polikliniği
+
+
+
+      </div>
+      <div class="doctor-list" id="nefroloji">
+        <button class="doctor-btn" onclick="showDoctor('ender')"><i class="fas fa-stethoscope"></i> PROF.DR.ENDER HÜR</button>
+        <button class="doctor-btn" onclick="showDoctor('zelal')"><i class="fas fa-stethoscope"></i> DOÇ. DR.ZELAL ADIBELLİ</button>
+        <button class="doctor-btn" onclick="showDoctor('ayse')"><i class="fas fa-stethoscope"></i> UZM.DR.AYŞE BÜTÜN</button>
+        <button class="doctor-btn" onclick="showDoctor('fadime')"><i class="fas fa-stethoscope"></i> UZM.DR.FADİME ERDOĞAN KÜÇÜKDAĞLI</button>
+      </div>
+    </div>
+
+    <!-- Nöroloji -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('nöroloji')">
+        <i class="fas fa-brain"></i> Nöroloji
+      </div>
+      <div class="doctor-list" id="nöroloji">
+        <button class="doctor-btn" onclick="showDoctor('gonca')"><i class="fas fa-stethoscope"></i> UZM.DR.GONCA OĞUZ KUŞCUOĞLU</button>
+        <button class="doctor-btn" onclick="showDoctor('hanife')"><i class="fas fa-stethoscope"></i> UZM.DR.HANİFE KARAKAYA</button>
+        <button class="doctor-btn" onclick="showDoctor('mahmut')"><i class="fas fa-stethoscope"></i> UZM.DR.MAHMUT SAMİ BİÇİMVEREN</button>
+        <button class="doctor-btn" onclick="showDoctor('mete')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü. METE ULUÇAY</button>
+      </div>
+    </div>
+
+    <!-- Ortopedi -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('ortopedi')">
+        <i class="fas fa-bone"></i> Ortopedi
+      </div>
+      <div class="doctor-list" id="ortopedi">
+        <button class="doctor-btn" onclick="showDoctor('alp')"><i class="fas fa-stethoscope"></i> UZM.DR.ALP AYDIN</button>
+        <button class="doctor-btn" onclick="showDoctor('bayram')"><i class="fas fa-stethoscope"></i> UZM.DR.BAYRAM ERGİN</button>
+        <button class="doctor-btn" onclick="showDoctor('davut')"><i class="fas fa-stethoscope"></i> UZM DR.DAVUT MUTAFOĞLU</button>
+        <button class="doctor-btn" onclick="showDoctor('ercument')"><i class="fas fa-stethoscope"></i> UZM.DR.ERCÜMENT EGELİ</button>
+        <button class="doctor-btn" onclick="showDoctor('fikri')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.FİKRİ BURAK İPÇİ</button>
+        <button class="doctor-btn" onclick="showDoctor('gokhan_ilyas')"><i class="fas fa-stethoscope"></i> DOÇ.DR.GÖKHAN İLYAS</button>
+        <button class="doctor-btn" onclick="showDoctor('gokhan')"><i class="fas fa-stethoscope"></i> UZM DR.GÖKHAN ŞENYUVA</button>
+        <button class="doctor-btn" onclick="showDoctor('halil')"><i class="fas fa-stethoscope"></i> UZM.DR.HALİL YILDIRIM</button>
+        <button class="doctor-btn" onclick="showDoctor('harun')"><i class="fas fa-stethoscope"></i> UZM.DR.HARUN SAĞLICAK</button>
+        <button class="doctor-btn" onclick="showDoctor('oguzhan')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü. OĞUZHAN GÖKALP</button>
+        <button class="doctor-btn" onclick="showDoctor('volkan')"><i class="fas fa-stethoscope"></i> UZM.DR.VOLKAN TURAL</button>
+        <button class="doctor-btn" onclick="showDoctor('betul')"><i class="fas fa-stethoscope"></i> UZM.DR.BETÜL AKGÜN AKTAŞ</button>
+      </div>
+    </div>
+
+    <!-- Perinatoloji -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('perinatoloji')">
+        <i class="fas fa-baby"></i> Perinatoloji
+      </div>
+      <div class="doctor-list" id="perinatoloji">
+        <button class="doctor-btn" onclick="showDoctor('ezgi')"><i class="fas fa-stethoscope"></i> UZM.DR.EZGİ BİLİCEN</button>
+      </div>
+    </div>
+
+    <!-- Plastik Cerrahi -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('plastik_cerrahi')">
+        <i class="fas fa-hand-sparkles"></i> Plastik Cerrahi
+      </div>
+      <div class="doctor-list" id="plastik_cerrahi">
+        <button class="doctor-btn" onclick="showDoctor('rizvan')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.RIZVAN IMAMALIYEV</button>
+        <button class="doctor-btn" onclick="showDoctor('burak')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.BURAK OKUMUŞ</button>
+        <button class="doctor-btn" onclick="showDoctor('cagri_sezer')"><i class="fas fa-stethoscope"></i> UZM.DR.ÇAĞRI ÇİMENTEPE SEZER</button>
+        <button class="doctor-btn" onclick="showDoctor('cagri_ogut')"><i class="fas fa-stethoscope"></i> DOÇ.DR.ÇAĞRI ÖĞÜT</button>
+      </div>
+    </div>
+
+    <!-- Psikiyatri -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('psikiyatri')">
+        <i class="fas fa-brain"></i> Psikiyatri Polikliniği
+      </div>
+    
+      </div>
+      <div class="doctor-list" id="psikiyatri">
+        <button class="doctor-btn" onclick="showDoctor('duriye')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.DÜRİYE GİZEM TOSUN DİLCİ</button>
+        <button class="doctor-btn" onclick="showDoctor('erdi')"><i class="fas fa-stethoscope"></i> UZM.DR.ERDİ SEZER</button>
+        <button class="doctor-btn" onclick="showDoctor('ergun')"><i class="fas fa-stethoscope"></i> UZM.DR.ERGÜN SEVİNÇ</button>
+        <button class="doctor-btn" onclick="showDoctor('gulshah')"><i class="fas fa-stethoscope"></i> UZM.DR. GÜLŞAH GÜÇLÜ ÇELME</button>
+        <button class="doctor-btn" onclick="showDoctor('ozge')"><i class="fas fa-stethoscope"></i> UZM.DR.ÖZGE TATLISU</button>
+        <button class="doctor-btn" onclick="showDoctor('seval')"><i class="fas fa-stethoscope"></i> UZM.DR. SEVAL TAŞPINAR</button>
+        <button class="doctor-btn" onclick="showDoctor('büşra')"><i class="fas fa-stethoscope"></i> BÜŞRA ÖZTÜRK</button>
+        <button class="doctor-btn" onclick="showDoctor('elif')"><i class="fas fa-stethoscope"></i> ELİF MERVE ÇINAR</button>
+        <button class="doctor-btn" onclick="showDoctor('gamze')"><i class="fas fa-stethoscope"></i> GAMZE NAKAŞ KARADAYI</button>
+      </div>
+
+
+    <!-- Romatoloji -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('romatoloji')">
+        <i class="fas fa-hand-holding-medical"></i> Romatoloji Polikliniği
+      </div>
+      <div class="doctor-list" id="romatoloji">
+        <button class="doctor-btn" onclick="showDoctor('gulay')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.GÜLAY ALP</button>
+        <button class="doctor-btn" onclick="showDoctor('iffet')"><i class="fas fa-stethoscope"></i> UZM.DR.İFFET MERVE U.BAYTAROĞLU</button>
+      </div>
+    </div>
+
+    <!-- Tıbbi Genetik -->
+    <div class="branch-card">
+      <div class="branch-header" onclick="toggleBranch('tibbi_genetik')">
+        <i class="fas fa-dna"></i> Tıbbi Genetik
+      </div>
+      <div class="doctor-list" id="tibbi_genetik">
+        <button class="doctor-btn" onclick="showDoctor('ali')"><i class="fas fa-stethoscope"></i> UZM.DR.ALI GÜLEN</button>
+    <button class="doctor-btn" onclick="showDoctor('fahrettin')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü. FAHRETTİN DUYMUŞ</button>
+  </div>
+</div>
+
+<!-- Tıbbi Onkoloji -->
+<div class="branch-card">
+
+  <div class="branch-header" onclick="toggleBranch('tibbi_onkoloji')">
+    <i class="fas fa-dna"></i>Tıbbi Onkoloji Polikliniği
+  </div>
+  <div class="doctor-list" id="tibbi_onkoloji">
+    
+    <button class="doctor-btn" onclick="showDoctor('aysegul')"><i class="fas fa-stethoscope"></i> UZM.DR.AYŞEGÜL MERÇ ÇETİNKAYA</button>
+    <button class="doctor-btn" onclick="showDoctor('murat')"><i class="fas fa-stethoscope"></i> UZM.DR.MURAT ESER</button>
+    <button class="doctor-btn" onclick="showDoctor('adem')"><i class="fas fa-stethoscope"></i> DR.ÖĞR.Ü.ADEM TUNÇEKİN</button>
+  </div>
+</div>
+
+<!-- Üroloji -->
+<div class="branch-card">
+  <div class="branch-header" onclick="toggleBranch('uroloji')">
+    <i class="fas fa-toilet"></i> Üroloji
+  </div>
+  <div class="doctor-list" id="uroloji">
+    <button class="doctor-btn" onclick="showDoctor('alper')"><i class="fas fa-stethoscope"></i> UZM.DR.ALPER EGE SARIKAYA</button>
+    <button class="doctor-btn" onclick="showDoctor('ferhat')"><i class="fas fa-stethoscope"></i> UZM.DR. C. FERHAT ÖNAL</button>
+    <button class="doctor-btn" onclick="showDoctor('suleyman')"><i class="fas fa-stethoscope"></i> UZM.DR.SÜLEYMAN DENİZ</button>
+  </div>
+</div>
+
+
+  <!-- Modal -->
+  <div id="doctor-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2>Lokasyon Bilgisi</h2>
+      <p id="modal-text">Yükleniyor...</p>
+      <button id="get-directions">Yol Tarifi Al</button>
+    </div>
+  </div>
+
+  <script>
+    function toggleBranch(branchId) {
+      const branch = document.getElementById(branchId);
+      branch.style.display = branch.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function showDoctor(doctorId) {
+      const modal = document.getElementById('doctor-modal');
+      const text = document.getElementById('modal-text');
+
+      const locations = {
+        hilal: "Zemin kat girişinden sağa dönün, düz ilerleyin, solunuzda kalacak.",
+        recep: "Zemin kat girişinden sola dönün, ilerleyin, sağdaki oda.",
+        utku: "1. kat, ikinci kapı sağda.",
+        berna: "Zemin kat, ilk sağdaki ikinci oda.",
+        hakan: "Zemin kat, koridor sonu.",
+        ece: "Cildiye polikliniği, 2. kat sol koridor."
+      };
+
+      text.textContent = locations[doctorId] || "Lokasyon bilgisi bulunamadı.";
+      modal.style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById('doctor-modal').style.display = "none";
+    }
+  </script>
+
+</body>
+</html>
